@@ -34,6 +34,7 @@ from typing import (
 )
 
 from pydantic import BaseModel, create_model
+import pydantic as pyd
 
 from .utils import IS_PYDANTIC_V2, get_caller
 
@@ -113,7 +114,10 @@ def _create_params(cls: Type[AbstractParams], fields: Dict[str, Any]) -> Mapping
     if not issubclass(cls, BaseModel):
         raise TypeError(f"{cls.__name__} must be subclass of BaseModel")
 
-    incorrect = sorted(fields.keys() - cls.model_fields.keys() - cls.__class_vars__)
+    if pyd.__version__.startswith("1"):
+        incorrect = sorted(fields.keys() - cls.__fields__.keys() - cls.__class_vars__)
+    else:
+        incorrect = sorted(fields.keys() - cls.model_fields.keys() - cls.__class_vars__)
     if incorrect:
         ending = "s" if len(incorrect) > 1 else ""
         raise ValueError(f"Unknown field{ending} {', '.join(incorrect)}")
